@@ -27,13 +27,13 @@ def extraer_texto(pdf_path):
     numero_factura = re.search(regex_numero_factura, texto)
     importes = re.findall(regex_importes, texto)
 
-    print(importes)
     importes_numericos = []
     for i in importes:
+        valor = float(i.replace(',', '.'))
         try:
-            importes_numericos.append(float(i))
+            importes_numericos.append(valor)
         except ValueError:
-            continue  # Si no se puede convertir, lo ignora
+            continue  
 
     # Filtrar el valor más alto (el total)
     total = max(importes_numericos) if importes_numericos else 0.0
