@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracción de Datos de Factura</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">Sube tu factura en PDF</h2>
+        <form action="/" method="post" enctype="multipart/form-data" class="text-center mt-4">
+            <input type="file" name="pdf_file" accept="application/pdf" class="form-control mb-3" required>
+            <button type="submit" class="btn btn-primary">Extraer Datos</button>
+        </form>
+        
+        {% if data %}
+        <div class="mt-5 p-4 border rounded">
+            <h4>Datos Extraídos:</h4>
+            <p><strong>CUIT:</strong> {{ data['CUIT'] }}</p>
+            <p><strong>Fecha:</strong> {{ data['Fecha'] }}</p>
+            <p><strong>Número de Factura:</strong> {{ data['Número de Factura'] }}</p>
+            <p><strong>Importe Total:</strong> ${{ "{:.2f}".format(data['Importe Total']) }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

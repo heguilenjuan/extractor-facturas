@@ -1,0 +1,58 @@
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+venv/
+.env/
+.venv/
+env/
+env.bak/
+
+# Dependencias y paquetes
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Archivos de logs y caché
+*.log
+*.sqlite3
+db.sqlite3
+instance/
+*.pid
+
+# Archivos de configuración y credenciales sensibles
+.env
+config.json
+config.yaml
+settings.py
+secrets.toml
+
+# Configuración de Flask
+flask_session/
+*.db
+.mypy_cache/
+.pytest_cache/
+
+# Archivos de despliegue
+*.pem
+*.key
+*.crt
+
+# Configuraciones de IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Archivos de Docker y contenedores
+*.dockerignore
+docker-compose.override.yml
+
+# Archivos de caché de Flask (si usas Flask-Caching)
+.cache/
