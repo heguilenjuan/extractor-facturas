@@ -1,84 +1,76 @@
-import re
-import fitz  # PyMuPDF
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
+from pdf_utils import extract_pdf_data, extraer_datos_de_pdf_con_plantilla, guardar_plantilla, obtener_plantilla_por_id
+from db import crear_tabla
 import os
 
 app = Flask(__name__)
 
-def extraer_texto(pdf_path):
-    doc = fitz.open(stream=pdf_path, filetype="pdf")
-    texto = "\n".join([pagina.get_text("text", sort=True) for pagina in doc])
+# Crear la tabla al iniciar la aplicación si no existe
+crear_tabla()
 
-    # Expresiones regulares mejoradas
-    regex_cuit = r"\b(?:C\.U\.I\.T[:\s]*)?(30|20|27)[-]?\d{2}[-]?\d{6}[-]?\d\b"
-    regex_fecha = r"\b(\d{2}/\d{2}/\d{4})\b"
-    regex_numero_factura = r"(?:N[°ºo]?[°º]?\s*|Factura\s*N[°ºo]?\s*)?(\d{6,})"
-    regex_importes = r"\b\d+(?:[.,]\d{2,})\b"
+@app.route("/extract_data", methods=["POST"])
+def extract_data():
+    file = request.files.get('file')
 
-    # Extracción de datos
-    cuit = re.search(regex_cuit, texto)
-    cuit_numero = cuit.group(0) if cuit else None
+    if not file or file.filename == "":
+        return jsonify({"error": "No se envió un archivo válido"}), 400
 
-    # Limpiar prefijo "C.U.I.T: " si existe
-    if cuit_numero:
-        cuit_numero = re.sub(r"[^\d]", "", cuit_numero)  # Elimina todo excepto números y guiones
+    try:
+        # Leer los datos binarios del archivo PDF
+        pdf_data = file.read()
 
-    fecha = re.search(regex_fecha, texto)
-    numero_factura = re.search(regex_numero_factura, texto)
-    importes = re.findall(regex_importes, texto)
+        # Extraer datos del PDF sin plantilla (función general)
+        extracted_data = extract_pdf_data(pdf_data)
 
-    importes_numericos = []
-    for i in importes:
-        valor = float(i.replace(',', '.'))
-        try:
-            importes_numericos.append(valor)
-        except ValueError:
-            continue  
+        return jsonify({"data": extracted_data})
 
-    # Filtrar el valor más alto (el total)
-    total = max(importes_numericos) if importes_numericos else 0.0
+    except Exception as e:
+        return jsonify({"error": f"Error al procesar el archivo: {str(e)}"}), 500
 
-    # Resultado final
-    datos_extraidos = {
-        "CUIT": cuit_numero,
-        "Fecha": fecha.group(1) if fecha else None,
-        "Número de Factura": numero_factura.group(1) if numero_factura else None,
-        "Importe Total": total,
-    }
+@app.route('/extraer-datos-plantilla', methods=['POST'])
+def extraer_datos_con_plantilla_route():
+    """
+    Ruta dedicada a extraer datos del PDF utilizando una plantilla específica.
+    """
+    file = request.files.get('file')
+    plantilla_id = request.form.get('plantilla_id')
 
-    return datos_extraidos
+    if not file or file.filename == "" or not plantilla_id:
+        return jsonify({"error": "No se envió un archivo válido o plantilla ID"}), 400
 
+    try:
+        # Leer los datos binarios del archivo PDF
+        pdf_data = file.read()
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    """Interfaz web con formulario de carga"""
-    if request.method == 'POST':
-        if 'pdf_file' not in request.files:
-            return "No se subió ningún archivo", 400
+        # Obtener la plantilla desde la base de datos usando el ID
+        plantilla = obtener_plantilla_por_id(plantilla_id)
 
-        pdf_file = request.files['pdf_file']
-        if pdf_file.filename == '':
-            return "Nombre de archivo vacío", 400
+        if not plantilla:
+            return jsonify({"error": "Plantilla no encontrada"}), 404
 
-        # Leer el archivo directamente en memoria
-        pdf_bytes = pdf_file.read()
-        extracted_data = extraer_texto(pdf_bytes)
+        # Extraer datos utilizando la plantilla
+        datos_extraidos = extraer_datos_de_pdf_con_plantilla(pdf_data, plantilla)
 
-        return render_template('index.html', data=extracted_data)
+        return jsonify({"data": datos_extraidos})
 
-    return render_template('index.html', data=None)
+    except Exception as e:
+        return jsonify({"error": f"Error al procesar el archivo con plantilla: {str(e)}"}), 500
 
-@app.route('/extraer-general', methods=['POST'])
-def extraer_datos():
-    """Endpoint API para extraer datos del PDF"""
-    archivo = request.files.get('file')
-    if not archivo or archivo.filename == "":
-        return jsonify({"error": "No se envió ningún archivo válido"}), 400
+@app.route('/crear-plantilla', methods=['POST'])
+def crear_plantilla_route():
+    nombre = request.json.get('nombre')
+    descripcion = request.json.get('descripcion')
+    datos = request.json.get('datos')
 
-    pdf_bytes = archivo.read()
-    datos = extraer_texto(pdf_bytes)
+    if not nombre or not descripcion or not datos:
+        return jsonify({"error": "Faltan datos para crear la plantilla"}), 400
 
-    return jsonify(datos)
+    try:
+        guardar_plantilla(nombre, descripcion, datos)  # Guardamos la plantilla
+        return jsonify({"mensaje": "Plantilla creada exitosamente"}), 201
+    except Exception as e:
+        return jsonify({"error": f"Hubo un problema al crear la plantilla: {str(e)}"}), 500
 
 if __name__ == '__main__':
+    crear_tabla()  # Crear las tablas si no existen
     app.run(debug=True, port=5000)
