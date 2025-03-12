@@ -9,8 +9,11 @@ MARGEN_X = 10
 MARGEN_Y = 10
 
 
-def extract_pdf_data(file_path):
-    pdf = fitz.open(file_path)
+import fitz  # PyMuPDF
+
+def extract_pdf_data(pdf_data):
+    # Abrir el PDF directamente desde los datos binarios (en memoria)
+    pdf = fitz.open(stream=pdf_data, filetype="pdf")
     data = []
 
     for page_num in range(pdf.page_count):
@@ -30,7 +33,9 @@ def extract_pdf_data(file_path):
                                 span["bbox"][0], span["bbox"][1], span["bbox"][2], span["bbox"][3]
                             ],
                         })
+
     return data
+
 
 def extraer_datos_de_pdf_con_plantilla(pdf_data, plantilla):
     doc = fitz.open(stream=pdf_data, filetype="pdf")  # Abrir el PDF directamente desde los datos binarios
@@ -85,14 +90,21 @@ def obtener_plantilla_por_id(plantilla_id):
 def guardar_plantilla(nombre, descripcion, datos):
     datos_serializados = json.dumps(datos)
 
-    conn = sqlite3.connect('plantillas.db')
-    cursor = conn.cursor()
+    # Conexión con la base de datos SQLite
+    try:
+        with sqlite3.connect('plantillas.db') as conn:
+            cursor = conn.cursor()
 
-    cursor.execute(""" 
-    INSERT INTO plantillas (nombre, descripcion, datos)
-    VALUES (?, ?, ?)
-    """, (nombre, descripcion, datos_serializados))
+            # Crear la consulta de inserción
+            cursor.execute(""" 
+            INSERT INTO plantillas (nombre, descripcion, datos)
+            VALUES (?, ?, ?)
+            """, (nombre, descripcion, datos_serializados))
 
-    conn.commit()
-    conn.close()
-    print(f"Plantilla '{nombre}' guardada con éxito en la base de datos.")
+            # Confirmar la transacción
+            conn.commit()
+            print(f"Plantilla '{nombre}' guardada con éxito en la base de datos.")
+    
+    except sqlite3.Error as e:
+        print(f"Error al guardar la plantilla: {e}")
+        raise e  # Relanzamos el error para capturarlo en la ruta

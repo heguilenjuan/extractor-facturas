@@ -2,11 +2,13 @@ from flask import Flask, request, jsonify
 from pdf_utils import extract_pdf_data, extraer_datos_de_pdf_con_plantilla, guardar_plantilla, obtener_plantilla_por_id
 from db import crear_tabla
 import os
+from flask_cors import CORS  # Importa el paquete CORS
 
 app = Flask(__name__)
 
 # Crear la tabla al iniciar la aplicación si no existe
 crear_tabla()
+CORS(app)  
 
 @app.route("/extract_data", methods=["POST"])
 def extract_data():
@@ -25,7 +27,10 @@ def extract_data():
         return jsonify({"data": extracted_data})
 
     except Exception as e:
+        # Agregar un log de error más detallado
+        print(f"Error al procesar el archivo: {str(e)}")  # Esto se verá en la consola del servidor
         return jsonify({"error": f"Error al procesar el archivo: {str(e)}"}), 500
+
 
 @app.route('/extraer-datos-plantilla', methods=['POST'])
 def extraer_datos_con_plantilla_route():
@@ -49,12 +54,14 @@ def extraer_datos_con_plantilla_route():
             return jsonify({"error": "Plantilla no encontrada"}), 404
 
         # Extraer datos utilizando la plantilla
-        datos_extraidos = extraer_datos_de_pdf_con_plantilla(pdf_data, plantilla)
+        datos_extraidos = extraer_datos_de_pdf_con_plantilla(
+            pdf_data, plantilla)
 
         return jsonify({"data": datos_extraidos})
 
     except Exception as e:
         return jsonify({"error": f"Error al procesar el archivo con plantilla: {str(e)}"}), 500
+
 
 @app.route('/crear-plantilla', methods=['POST'])
 def crear_plantilla_route():
@@ -62,13 +69,16 @@ def crear_plantilla_route():
     descripcion = request.json.get('descripcion')
     datos = request.json.get('datos')
 
+    # Validación básica
     if not nombre or not descripcion or not datos:
         return jsonify({"error": "Faltan datos para crear la plantilla"}), 400
 
     try:
-        guardar_plantilla(nombre, descripcion, datos)  # Guardamos la plantilla
+        # Guardar plantilla en la base de datos
+        guardar_plantilla(nombre, descripcion, datos)
         return jsonify({"mensaje": "Plantilla creada exitosamente"}), 201
     except Exception as e:
+        # Manejo de errores
         return jsonify({"error": f"Hubo un problema al crear la plantilla: {str(e)}"}), 500
 
 if __name__ == '__main__':
