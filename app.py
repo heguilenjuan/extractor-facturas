@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from pdf_utils import extract_pdf_data, extraer_datos_de_pdf_con_plantilla, guardar_plantilla, obtener_plantilla_por_id
+from pdf_utils import extract_pdf_data, extraer_datos_de_pdf_con_plantilla, guardar_plantilla, obtener_plantilla_por_id, obtener_todas_las_plantillas
 from db import crear_tabla
 import os
 from flask_cors import CORS  # Importa el paquete CORS
@@ -80,6 +80,16 @@ def crear_plantilla_route():
     except Exception as e:
         # Manejo de errores
         return jsonify({"error": f"Hubo un problema al crear la plantilla: {str(e)}"}), 500
+
+@app.route('/plantillas', methods=['GET'])
+def obtener_plantillas():
+    try:
+        plantillas = obtener_todas_las_plantillas()
+        return jsonify({"plantillas": plantillas}), 200
+    except Exception as e:
+        return jsonify({"error": f"Error al obtener las plantillas: {str(e)}"}), 500
+
+
 
 if __name__ == '__main__':
     crear_tabla()  # Crear las tablas si no existen

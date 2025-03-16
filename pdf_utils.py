@@ -1,7 +1,5 @@
-import pymupdf
 import fitz
 import json
-from typing import List, Dict
 import sqlite3
 
 # Definir los márgenes de tolerancia
@@ -108,3 +106,21 @@ def guardar_plantilla(nombre, descripcion, datos):
     except sqlite3.Error as e:
         print(f"Error al guardar la plantilla: {e}")
         raise e  # Relanzamos el error para capturarlo en la ruta
+    
+
+def obtener_todas_las_plantillas():
+        conn = sqlite3.connect('plantillas.db')
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id, nombre, descripcion, datos FROM plantillas")
+        rows = cursor.fetchall()
+        conn.close()
+
+        # Convertir los datos a formato JSON
+        plantillas = [
+            {"id": row[0], "nombre": row[1], "descripcion": row[2], "datos": json.loads(row[3])}
+            for row in rows
+        ]
+
+        return plantillas
+

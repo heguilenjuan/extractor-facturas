@@ -1,5 +1,4 @@
 import sqlite3
-import json
 
 def crear_tabla():
     conn = sqlite3.connect('plantillas.db')
