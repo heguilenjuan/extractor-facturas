@@ -15,4 +15,3 @@ def crear_tabla():
 
     conn.commit()
     conn.close()
-    print("Tabla 'plantillas' creada o ya existente.")

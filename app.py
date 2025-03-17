@@ -28,7 +28,6 @@ def extract_data():
 
     except Exception as e:
         # Agregar un log de error más detallado
-        print(f"Error al procesar el archivo: {str(e)}")  # Esto se verá en la consola del servidor
         return jsonify({"error": f"Error al procesar el archivo: {str(e)}"}), 500
 
 
@@ -40,7 +39,6 @@ def extraer_datos_con_plantilla_route():
     file = request.files.get('file')
     plantilla_id = request.form.get('plantilla_id')
     
-    print(plantilla_id, file)
 
     if not file or file.filename == "" or not plantilla_id:
         return jsonify({"error": "No se envió un archivo válido o plantilla ID"}), 400

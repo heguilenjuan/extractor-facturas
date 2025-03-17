@@ -101,10 +101,8 @@ def guardar_plantilla(nombre, descripcion, datos):
 
             # Confirmar la transacción
             conn.commit()
-            print(f"Plantilla '{nombre}' guardada con éxito en la base de datos.")
     
     except sqlite3.Error as e:
-        print(f"Error al guardar la plantilla: {e}")
         raise e  # Relanzamos el error para capturarlo en la ruta
     
 
