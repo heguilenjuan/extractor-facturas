@@ -42,8 +42,8 @@ def extraer_datos_de_pdf_con_plantilla(pdf_data, plantilla):
     # Recorrer las páginas del PDF
     for pagina in doc:
         for dato in plantilla["datos"]:
-            nombre = dato["nombre"]
-            coords = dato["coordenadas"]
+            nombre = dato["key"]
+            coords = dato["value"]["position"]
 
             # Verificar si las coordenadas están en el formato correcto (lista de 4 elementos)
             if len(coords) != 4:

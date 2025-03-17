@@ -39,6 +39,8 @@ def extraer_datos_con_plantilla_route():
     """
     file = request.files.get('file')
     plantilla_id = request.form.get('plantilla_id')
+    
+    print(plantilla_id, file)
 
     if not file or file.filename == "" or not plantilla_id:
         return jsonify({"error": "No se envió un archivo válido o plantilla ID"}), 400
